@@ -5,6 +5,7 @@ package Data::Rx;
 
 use Data::Rx::Util;
 use Data::Rx::TypeBundle::Core;
+use Data::Rx::ComposedType;
 
 =head1 SYNOPSIS
 
@@ -119,17 +120,7 @@ sub make_schema {
 
   my $schema_arg = {%$schema};
   delete $schema_arg->{type};
-
-  my $checker;
-
-  if (ref $handler) {
-    if (keys %$schema_arg) {
-      Carp::croak("composed type does not take check arguments");
-    }
-    $checker = $self->make_schema($handler->{'schema'});
-  } else {
-    $checker = $handler->new_checker($schema_arg, $self);
-  }
+  my $checker = $handler->new_checker($schema_arg, $self);
 
   return $checker;
 }
@@ -196,7 +187,8 @@ sub learn_type {
   die "invalid schema for '$uri': $@"
     unless eval { $self->make_schema($schema) };
 
-  $self->{handler}{ $uri } = { schema => $schema };
+  $self->{handler}{ $uri } =
+    Data::Rx::ComposedType->new({ uri => $uri, schema => $schema });
 }
 
 =method add_prefix
