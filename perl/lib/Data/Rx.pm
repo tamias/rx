@@ -5,6 +5,7 @@ package Data::Rx;
 
 use Data::Rx::Util;
 use Data::Rx::TypeBundle::Core;
+use Data::Rx::Lazy;
 
 =head1 SYNOPSIS
 
@@ -112,12 +113,18 @@ sub make_schema {
 
   Carp::croak("no type name given") unless my $type = $schema->{type};
 
+  my $schema_arg = {%$schema};
+
+  if ($schema_arg->{lazy}) {
+    delete $schema_arg->{lazy};
+    return Data::Rx::Lazy->new_checker({ schema => $schema_arg }, $self);
+  }
+
   my $type_uri = $self->_expand_uri($type);
   die "unknown type uri: $type_uri" unless exists $self->{handler}{$type_uri};
 
   my $handler = $self->{handler}{$type_uri};
 
-  my $schema_arg = {%$schema};
   delete $schema_arg->{type};
 
   my $checker;
